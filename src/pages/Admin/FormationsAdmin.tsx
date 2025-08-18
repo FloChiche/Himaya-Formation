@@ -1,3 +1,4 @@
+// src/pages/Admin/FormationsAdmin.tsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import supabase from "@/supabase";
 import type { Category, Formation } from "@/types/database";
@@ -11,6 +12,9 @@ type FormState = {
   image_url: string;
   short_desc: string;
   is_published: boolean;
+  // NEW
+  nombre_personnes: number | null;
+  fournit_certificat: boolean;
 };
 
 const emptyForm: FormState = {
@@ -22,6 +26,9 @@ const emptyForm: FormState = {
   image_url: "",
   short_desc: "",
   is_published: true,
+  // NEW
+  nombre_personnes: 0,
+  fournit_certificat: false,
 };
 
 export default function FormationsAdmin() {
@@ -40,12 +47,13 @@ export default function FormationsAdmin() {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const [{ data: cats }, { data: forms }] = await Promise.all([
+      const [{ data: cats, error: e1 }, { data: forms, error: e2 }] = await Promise.all([
         supabase.from("categories").select("*").order("order_index", { ascending: true }),
+        // * récupère aussi nombre_personnes & fournit_certificat s'ils existent
         supabase.from("formations").select("*").order("created_at", { ascending: false }),
       ]);
-      if (cats) setCategories(cats);
-      if (forms) setItems(forms);
+      if (!e1 && cats) setCategories(cats);
+      if (!e2 && forms) setItems(forms);
       setLoading(false);
     })();
   }, []);
@@ -61,6 +69,9 @@ export default function FormationsAdmin() {
   };
 
   const selectFormation = (f: Formation) => {
+    const np: number | null = (f as any)?.nombre_personnes ?? 0;
+    const cert: boolean = !!(f as any)?.fournit_certificat;
+
     setSelectedId(f.id);
     setForm({
       title: f.title ?? "",
@@ -71,6 +82,9 @@ export default function FormationsAdmin() {
       image_url: f.image_url ?? "",
       short_desc: f.short_desc ?? "",
       is_published: !!f.is_published,
+      // NEW
+      nombre_personnes: typeof np === "number" ? np : 0,
+      fournit_certificat: cert,
     });
     setTimeout(() => titleRef.current?.focus(), 0);
   };
@@ -104,6 +118,9 @@ export default function FormationsAdmin() {
       image_url: form.image_url.trim() || null,
       short_desc: form.short_desc.trim() || null,
       is_published: form.is_published,
+      // NEW
+      nombre_personnes: typeof form.nombre_personnes === "number" ? form.nombre_personnes : 0,
+      fournit_certificat: !!form.fournit_certificat,
     };
 
     try {
@@ -271,22 +288,42 @@ export default function FormationsAdmin() {
                     className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#2F6DF6]"
                   />
                 </div>
-                <div>
-                  <label htmlFor="price" className="block text-sm font-medium text-slate-700">
-                    Prix (MAD)
-                  </label>
-                  <input
-                    id="price"
-                    type="number"
-                    min={0}
-                    value={form.price_mad ?? ""}
-                    onChange={(e) =>
-                      setForm((s) => ({ ...s, price_mad: e.target.value ? Number(e.target.value) : null }))
-                    }
-                    placeholder="ex: 1200"
-                    className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#2F6DF6]"
-                  />
-                </div>
+                
+              </div>
+
+              {/* NEW: Nombre de personnes */}
+              <div>
+                <label htmlFor="np" className="block text-sm font-medium text-slate-700">
+                  Nombre de personnes
+                </label>
+                <input
+                  id="np"
+                  type="number"
+                  min={0}
+                  value={form.nombre_personnes ?? 0}
+                  onChange={(e) =>
+                    setForm((s) => ({
+                      ...s,
+                      nombre_personnes: e.target.value === "" ? 0 : Number(e.target.value),
+                    }))
+                  }
+                  placeholder="ex: 12"
+                  className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#2F6DF6]"
+                />
+              </div>
+
+              {/* NEW: Fournit un certificat */}
+              <div className="flex items-center gap-2 mt-7">
+                <input
+                  id="cert"
+                  type="checkbox"
+                  checked={!!form.fournit_certificat}
+                  onChange={(e) => setForm((s) => ({ ...s, fournit_certificat: e.target.checked }))}
+                  className="h-4 w-4 rounded border-slate-300 text-[#2F6DF6] focus:ring-[#2F6DF6]"
+                />
+                <label htmlFor="cert" className="text-sm font-medium text-slate-700">
+                  Certificat
+                </label>
               </div>
 
               <div className="md:col-span-2">
@@ -378,58 +415,76 @@ export default function FormationsAdmin() {
                 Aucune formation.
               </div>
             ) : (
-              filtered.map((f) => (
-                <button
-                  key={f.id}
-                  onClick={() => selectFormation(f)}
-                  className={`group text-left rounded-2xl bg-white ring-1 ring-slate-200 shadow-sm p-5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#2F6DF6] ${
-                    selectedId === f.id ? "ring-2 ring-[#2F6DF6]" : ""
-                  }`}
-                  aria-label={`Éditer la formation ${f.title}`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="text-xs font-semibold uppercase tracking-wide text-[#2F6DF6]">
-                        {currentCategoryName(f.category_id)}
+              filtered.map((f) => {
+                
+                const np: number | null = (f as any)?.nombre_personnes ?? null;
+                const cert: boolean = !!(f as any)?.fournit_certificat;
+
+                return (
+                  <button
+                    key={f.id}
+                    onClick={() => selectFormation(f)}
+                    className={`group text-left rounded-2xl bg-white ring-1 ring-slate-200 shadow-sm p-5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#2F6DF6] ${
+                      selectedId === f.id ? "ring-2 ring-[#2F6DF6]" : ""
+                    }`}
+                    aria-label={`Éditer la formation ${f.title}`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="text-xs font-semibold uppercase tracking-wide text-[#2F6DF6]">
+                          {currentCategoryName(f.category_id)}
+                        </div>
+                        <h3 className="mt-1 line-clamp-2 font-semibold text-slate-900">
+                          {f.title}
+                        </h3>
+                        <p className="mt-1 line-clamp-2 text-sm text-slate-600">
+                          {f.short_desc ?? "—"}
+                        </p>
                       </div>
-                      <h3 className="mt-1 line-clamp-2 font-semibold text-slate-900">
-                        {f.title}
-                      </h3>
-                      <p className="mt-1 line-clamp-2 text-sm text-slate-600">
-                        {f.short_desc ?? "—"}
-                      </p>
+                      <span
+                        className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${
+                          f.is_published
+                            ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
+                            : "bg-slate-100 text-slate-600 ring-1 ring-slate-300"
+                        }`}
+                        title={f.is_published ? "Publié" : "Masqué"}
+                      >
+                        {f.is_published ? "Publié" : "Masqué"}
+                      </span>
                     </div>
-                    <span
-                      className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${
-                        f.is_published
-                          ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
-                          : "bg-slate-100 text-slate-600 ring-1 ring-slate-300"
-                      }`}
-                      title={f.is_published ? "Publié" : "Masqué"}
-                    >
-                      {f.is_published ? "Publié" : "Masqué"}
-                    </span>
-                  </div>
-                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                    <span className="rounded-full bg-slate-50 ring-1 ring-slate-200 px-2 py-1">
-                      {f.city ?? "Partout"}
-                    </span>
-                    {typeof f.duration_days === "number" && (
+
+                    <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
                       <span className="rounded-full bg-slate-50 ring-1 ring-slate-200 px-2 py-1">
-                        {f.duration_days} j
+                        {f.city ?? "Partout"}
                       </span>
-                    )}
-                    {typeof f.price_mad === "number" && (
-                      <span className="rounded-full bg-slate-50 ring-1 ring-slate-200 px-2 py-1">
-                        {f.price_mad.toLocaleString("fr-MA")} MAD
+                      {typeof f.duration_days === "number" && (
+                        <span className="rounded-full bg-slate-50 ring-1 ring-slate-200 px-2 py-1">
+                          {f.duration_days} j
+                        </span>
+                      )}
+                      {typeof f.price_mad === "number" && (
+                        <span className="rounded-full bg-slate-50 ring-1 ring-slate-200 px-2 py-1">
+                          {f.price_mad.toLocaleString("fr-MA")} MAD
+                        </span>
+                      )}
+                      {/* NEW badges */}
+                      {typeof np === "number" && (
+                        <span className="rounded-full bg-slate-50 ring-1 ring-slate-200 px-2 py-1">
+                          {np} pers.
+                        </span>
+                      )}
+                      {cert && (
+                        <span className="rounded-full bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 px-2 py-1">
+                          Certificat
+                        </span>
+                      )}
+                      <span className="ml-auto text-slate-400 group-hover:text-slate-500">
+                        Cliquer pour modifier →
                       </span>
-                    )}
-                    <span className="ml-auto text-slate-400 group-hover:text-slate-500">
-                      Cliquer pour modifier →
-                    </span>
-                  </div>
-                </button>
-              ))
+                    </div>
+                  </button>
+                );
+              })
             )}
           </div>
         </div>

@@ -9,10 +9,12 @@ type Formateur = {
   rating: number | null;
   total_ratings: number | null;
   completion_rate: number | null;
-  specialties: string | null;      // texte (ex: "Secourisme, Incendie")
+  specialties: string | null; // ex: "Secourisme, Incendie"
   description: string | null;
   image_url: string | null;
   is_published: boolean;
+  mobility_national: string | null;       // ⬅️ NOUVEAU
+  mobility_international: string | null;  // ⬅️ NOUVEAU
   created_at: string;
   updated_at: string;
 };
@@ -27,6 +29,8 @@ const emptyForm: Partial<Formateur> = {
   description: "",
   image_url: "",
   is_published: true,
+  mobility_national: "",
+  mobility_international: "",
 };
 
 export default function FormateursAdmin() {
@@ -46,7 +50,7 @@ export default function FormateursAdmin() {
     const { data, error } = await supabase
       .from("formateurs")
       .select(
-        "id,name,city,rating,total_ratings,completion_rate,specialties,description,image_url,is_published,created_at,updated_at"
+        "id,name,city,rating,total_ratings,completion_rate,specialties,description,image_url,is_published,mobility_national,mobility_international,created_at,updated_at"
       )
       .order("created_at", { ascending: false });
 
@@ -72,6 +76,8 @@ export default function FormateursAdmin() {
         f.name ?? "",
         f.city ?? "",
         f.specialties ?? "",
+        f.mobility_national ?? "",
+        f.mobility_international ?? "",
         String(f.rating ?? ""),
       ]
         .join(" ")
@@ -97,8 +103,7 @@ export default function FormateursAdmin() {
     e.preventDefault();
     setSaving(true);
 
-    // valeurs à envoyer (on ne pousse pas les champs calculés)
-    const payload = {
+    const payload: any = {
       name: form.name?.toString().trim() || "",
       city: (form.city ?? "").toString().trim() || null,
       rating: form.rating ?? null,
@@ -108,6 +113,11 @@ export default function FormateursAdmin() {
       description: (form.description ?? "").toString().trim() || null,
       image_url: (form.image_url ?? "").toString().trim() || null,
       is_published: !!form.is_published,
+      // ⬇️ champs mobilité séparés
+      mobility_national:
+        (form.mobility_national ?? "").toString().trim() || null,
+      mobility_international:
+        (form.mobility_international ?? "").toString().trim() || null,
       updated_at: new Date().toISOString(),
     };
 
@@ -195,19 +205,18 @@ export default function FormateursAdmin() {
       {/* Stats rapides */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
         <StatCard label="Total" value={items.length} />
+        <StatCard label="Actifs" value={items.filter((f) => f.is_published).length} />
+        <StatCard label="Villes" value={new Set(items.map((f) => f.city ?? "")).size} />
         <StatCard
-          label="Actifs"
-          value={items.filter((f) => f.is_published).length}
+          label="Nouveaux (30j)"
+          value={
+            items.filter((f) => {
+              const d = new Date(f.created_at);
+              const ago = Date.now() - d.getTime();
+              return ago <= 30 * 24 * 3600 * 1000;
+            }).length
+          }
         />
-        <StatCard
-          label="Villes"
-          value={new Set(items.map((f) => f.city ?? "")).size}
-        />
-        <StatCard label="Nouveaux (30j)" value={items.filter((f) => {
-          const d = new Date(f.created_at);
-          const ago = Date.now() - d.getTime();
-          return ago <= 30 * 24 * 3600 * 1000;
-        }).length} />
       </div>
 
       {/* Tableau */}
@@ -218,6 +227,7 @@ export default function FormateursAdmin() {
               <Th>Nom</Th>
               <Th>Ville</Th>
               <Th>Spécialités</Th>
+              <Th>Mobilité (Nat. / Inter.)</Th>
               <Th>Note</Th>
               <Th>Statut</Th>
               <Th className="text-right pr-4">Actions</Th>
@@ -227,22 +237,15 @@ export default function FormateursAdmin() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={6} className="p-6 text-slate-500">
-                  Chargement…
-                </td>
+                <td colSpan={7} className="p-6 text-slate-500">Chargement…</td>
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="p-6 text-slate-500">
-                  Aucun formateur trouvé.
-                </td>
+                <td colSpan={7} className="p-6 text-slate-500">Aucun formateur trouvé.</td>
               </tr>
             ) : (
               filtered.map((f) => (
-                <tr
-                  key={f.id}
-                  className="border-t border-slate-100 hover:bg-slate-50"
-                >
+                <tr key={f.id} className="border-t border-slate-100 hover:bg-slate-50">
                   <Td>
                     <div className="flex items-center gap-3">
                       {f.image_url ? (
@@ -263,34 +266,27 @@ export default function FormateursAdmin() {
                     </div>
                   </Td>
                   <Td className="whitespace-nowrap">{f.city ?? "—"}</Td>
-                  <Td className="max-w-[420px]">
-                    <span className="line-clamp-2">
-                      {f.specialties ?? "—"}
-                    </span>
+                  <Td className="max-w-[340px]"><span className="line-clamp-2">{f.specialties ?? "—"}</span></Td>
+                  <Td className="whitespace-nowrap">
+                    <div className="text-xs text-slate-700">
+                      <div><span className="text-slate-500">Nat :</span> {f.mobility_national ?? "—"}</div>
+                      <div><span className="text-slate-500">Inter :</span> {f.mobility_international ?? "—"}</div>
+                    </div>
                   </Td>
                   <Td>
                     {f.rating ? (
                       <span className="inline-flex items-center gap-1">
                         <svg width="14" height="14" viewBox="0 0 20 20" className="text-amber-500">
-                          <path
-                            d="M10 1.5l2.6 5.27 5.82.85-4.21 4.1.99 5.78L10 14.98 4.8 17.5l.99-5.78L1.58 7.62l5.82-.85L10 1.5z"
-                            fill="currentColor"
-                          />
+                          <path d="M10 1.5l2.6 5.27 5.82.85-4.21 4.1.99 5.78L10 14.98 4.8 17.5l.99-5.78L1.58 7.62l5.82-.85L10 1.5z" fill="currentColor" />
                         </svg>
                         <span className="font-medium">{f.rating.toFixed(1)}</span>
                       </span>
-                    ) : (
-                      "—"
-                    )}
+                    ) : ("—")}
                   </Td>
                   <Td>
-                    <span
-                      className={
-                        f.is_published
-                          ? "inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700"
-                          : "inline-flex items-center rounded-full bg-rose-100 px-2 py-0.5 text-xs font-semibold text-rose-700"
-                      }
-                    >
+                    <span className={f.is_published
+                      ? "inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700"
+                      : "inline-flex items-center rounded-full bg-rose-100 px-2 py-0.5 text-xs font-semibold text-rose-700"}>
                       {f.is_published ? "Publié" : "Non publié"}
                     </span>
                   </Td>
@@ -341,10 +337,8 @@ export default function FormateursAdmin() {
             </div>
 
             <form onSubmit={handleSave} className="grid gap-4 md:grid-cols-2">
-              <div className="md:col-span-1">
-                <label className="block text-sm font-medium text-slate-700">
-                  Nom *
-                </label>
+              <div>
+                <label className="block text-sm font-medium text-slate-700">Nom *</label>
                 <input
                   required
                   value={form.name ?? ""}
@@ -353,10 +347,8 @@ export default function FormateursAdmin() {
                 />
               </div>
 
-              <div className="md:col-span-1">
-                <label className="block text-sm font-medium text-slate-700">
-                  Ville
-                </label>
+              <div>
+                <label className="block text-sm font-medium text-slate-700">Ville</label>
                 <input
                   value={form.city ?? ""}
                   onChange={(e) => setForm((s) => ({ ...s, city: e.target.value }))}
@@ -365,9 +357,7 @@ export default function FormateursAdmin() {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-slate-700">
-                  Spécialités (séparées par des virgules)
-                </label>
+                <label className="block text-sm font-medium text-slate-700">Spécialités (séparées par des virgules)</label>
                 <input
                   value={form.specialties ?? ""}
                   onChange={(e) => setForm((s) => ({ ...s, specialties: e.target.value }))}
@@ -376,9 +366,7 @@ export default function FormateursAdmin() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700">
-                  Note (ex: 4.8)
-                </label>
+                <label className="block text-sm font-medium text-slate-700">Note (ex: 4.8)</label>
                 <input
                   type="number"
                   step="0.1"
@@ -390,38 +378,29 @@ export default function FormateursAdmin() {
                 />
               </div>
 
+              {/* ⬇️ Champs totalement indépendants de "city" */}
               <div>
-                <label className="block text-sm font-medium text-slate-700">
-                  Nombre d’avis
-                </label>
+                <label className="block text-sm font-medium text-slate-700">Mobilité nationale</label>
                 <input
-                  type="number"
-                  value={form.total_ratings ?? ""}
-                  onChange={(e) =>
-                    setForm((s) => ({ ...s, total_ratings: e.target.value === "" ? null : Number(e.target.value) }))
-                  }
+                  value={form.mobility_national ?? ""}
+                  onChange={(e) => setForm((s) => ({ ...s, mobility_national: e.target.value }))}
+                  placeholder="Ex: Tout le Maroc, Régions, …"
                   className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#2F6DF6]"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700">
-                  Taux de complétion (%)
-                </label>
+                <label className="block text-sm font-medium text-slate-700">Mobilité internationale</label>
                 <input
-                  type="number"
-                  value={form.completion_rate ?? ""}
-                  onChange={(e) =>
-                    setForm((s) => ({ ...s, completion_rate: e.target.value === "" ? null : Number(e.target.value) }))
-                  }
+                  value={form.mobility_international ?? ""}
+                  onChange={(e) => setForm((s) => ({ ...s, mobility_international: e.target.value }))}
+                  placeholder="Ex: Europe, Afrique, MENA, …"
                   className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#2F6DF6]"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700">
-                  Photo (URL)
-                </label>
+                <label className="block text-sm font-medium text-slate-700">Photo (URL)</label>
                 <input
                   value={form.image_url ?? ""}
                   onChange={(e) => setForm((s) => ({ ...s, image_url: e.target.value }))}
@@ -430,9 +409,7 @@ export default function FormateursAdmin() {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-slate-700">
-                  Biographie / Description
-                </label>
+                <label className="block text-sm font-medium text-slate-700">Biographie / Description</label>
                 <textarea
                   rows={4}
                   value={form.description ?? ""}
@@ -449,9 +426,7 @@ export default function FormateursAdmin() {
                   onChange={(e) => setForm((s) => ({ ...s, is_published: e.target.checked }))}
                   className="h-4 w-4"
                 />
-                <label htmlFor="pub" className="text-sm text-slate-700">
-                  Publié
-                </label>
+                <label htmlFor="pub" className="text-sm text-slate-700">Publié</label>
               </div>
 
               <div className="md:col-span-2 mt-2 flex justify-end gap-3">
@@ -487,17 +462,9 @@ function StatCard({ label, value }: { label: string; value: number }) {
     </div>
   );
 }
-function Th({
-  children,
-  className = "",
-}: React.PropsWithChildren<{ className?: string }>) {
-  return (
-    <th className={`px-4 py-3 text-sm font-semibold ${className}`}>{children}</th>
-  );
+function Th({ children, className = "" }: React.PropsWithChildren<{ className?: string }>) {
+  return <th className={`px-4 py-3 text-sm font-semibold ${className}`}>{children}</th>;
 }
-function Td({
-  children,
-  className = "",
-}: React.PropsWithChildren<{ className?: string }>) {
+function Td({ children, className = "" }: React.PropsWithChildren<{ className?: string }>) {
   return <td className={`px-4 py-3 align-top ${className}`}>{children}</td>;
 }

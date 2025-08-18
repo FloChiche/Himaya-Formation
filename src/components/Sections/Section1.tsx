@@ -21,7 +21,7 @@ export default function Section1() {
               CATALOGUE FORMATIONS
             </a>
             <a
-              href="#experts"
+              href="/nos-formateurs"
               className="bg-transparent border border-white text-white font-semibold px-6 py-3 rounded-lg hover:bg-white hover:text-blue-700 transition"
             >
               TOUS NOS EXPERTS

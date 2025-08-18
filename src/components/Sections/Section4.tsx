@@ -56,7 +56,7 @@ export default function Section4() {
         {/* CTA */}
         <div className="text-center mt-14">
           <a
-            href="#"
+            href="/nos-formateurs"
             className="inline-flex items-center rounded-full bg-[#2F6DF6] px-8 py-4 text-white font-semibold shadow hover:bg-[#1E4ED8] transition"
           >
             Voir tous nos formateurs

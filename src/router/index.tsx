@@ -4,6 +4,10 @@ import { createBrowserRouter } from "react-router-dom";
 // Providers (contexte, thème, session…)
 import Providers from "@/Providers";
 
+
+
+
+
 // Pages publiques
 import HomePage from "@/pages/HomePage";
 import { AuthPage } from "@/pages/AuthPage";
@@ -78,6 +82,22 @@ const router = createBrowserRouter([
 
 
 
+// src/router/index.tsx (extrait dans la branche /protected/admin)
+{
+  path: "/protected/admin",
+  element: <AppLayout />, // ton layout admin avec la sidebar et <Outlet />
+  children: [
+    { path: "formations", element: <FormationsAdmin /> },
+    { path: "formateurs", element: <FormateursAdmin /> },
+    { path: "references", element: <div>Références — à implémenter</div> },
+    { path: "thematiques", element: <div>Thématiques — à implémenter</div> },
+    { path: "categories", element: <div>Catégories — à implémenter</div> },
+    { path: "footer", element: <div>Footer — à implémenter</div> },
+    { path: "safety-activities", element: <div>SafetyActivities — à implémenter</div> },
+    { path: "catalogues", element: <div>Catalogues — à implémenter</div> },
+    { path: "documents", element: <div>Documents — à implémenter</div> },
+  ],
+},
 
 
 
