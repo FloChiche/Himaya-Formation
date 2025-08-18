@@ -1,19 +1,18 @@
+import { Link } from "react-router-dom";
 import {
   ArrowUpCircleIcon,
-  BarChartIcon,
-  CameraIcon,
-  ClipboardListIcon,
-  DatabaseIcon,
-  FileCodeIcon,
-  FileIcon,
-  FileTextIcon,
-  FolderIcon,
-  HelpCircleIcon,
   LayoutDashboardIcon,
   ListIcon,
-  SearchIcon,
-  SettingsIcon,
+  BarChartIcon,
+  FolderIcon,
   UsersIcon,
+  DatabaseIcon,
+  ClipboardListIcon,
+  FileIcon,
+  SettingsIcon,
+  HelpCircleIcon,
+  SearchIcon,
+  BookOpen, // 👈 icône pour Formations (Admin)
 } from "lucide-react";
 
 import { NavDocuments } from "@/components/layout/nav-documents";
@@ -32,118 +31,27 @@ import {
 
 const data = {
   user: {
-    name: "shadcn",
-    email: "m@example.com",
+    name: "flo.chiche",
+    email: "flo.chiche@icloud.com",
     avatar: "/avatars/shadcn.jpg",
   },
   navMain: [
-    {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: LayoutDashboardIcon,
-    },
-    {
-      title: "Lifecycle",
-      url: "#",
-      icon: ListIcon,
-    },
-    {
-      title: "Analytics",
-      url: "#",
-      icon: BarChartIcon,
-    },
-    {
-      title: "Projects",
-      url: "#",
-      icon: FolderIcon,
-    },
-    {
-      title: "Team",
-      url: "#",
-      icon: UsersIcon,
-    },
-  ],
-  navClouds: [
-    {
-      title: "Capture",
-      icon: CameraIcon,
-      isActive: true,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Proposal",
-      icon: FileTextIcon,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Prompts",
-      icon: FileCodeIcon,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "#",
-      icon: SettingsIcon,
-    },
-    {
-      title: "Get Help",
-      url: "#",
-      icon: HelpCircleIcon,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: SearchIcon,
-    },
+    { title: "Home", url: "/protected", icon: LayoutDashboardIcon },
+    { title: "Nos formations", url: "/nos-formations", icon: ListIcon },
+    { title: "Nos formateurs", url: "/nos-formateurs", icon: UsersIcon },
+    { title: "Safety Day", url: "/safety-days", icon: BarChartIcon },
+    // 👇 Onglet admin demandé
+    { title: "Formations (Admin)", url: "/protected/admin/formations", icon: BookOpen },
   ],
   documents: [
-    {
-      name: "Data Library",
-      url: "#",
-      icon: DatabaseIcon,
-    },
-    {
-      name: "Reports",
-      url: "#",
-      icon: ClipboardListIcon,
-    },
-    {
-      name: "Word Assistant",
-      url: "#",
-      icon: FileIcon,
-    },
+    { name: "Data Library", url: "#", icon: DatabaseIcon },
+    { name: "Reports", url: "#", icon: ClipboardListIcon },
+    { name: "Word Assistant", url: "#", icon: FileIcon },
+  ],
+  navSecondary: [
+    { title: "Settings", url: "#", icon: SettingsIcon },
+    { title: "Get Help", url: "#", icon: HelpCircleIcon },
+    { title: "Search", url: "#", icon: SearchIcon },
   ],
 };
 
@@ -153,23 +61,23 @@ export function AppSidebar() {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5 "
-            >
-              <a href="#">
+            <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:!p-1.5">
+              {/* 👇 brand cliquable avec Link */}
+              <Link to="/protected">
                 <ArrowUpCircleIcon className="h-5 w-5" />
                 <span className="text-base font-semibold">Himaya-Formation.ma</span>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
+
       <SidebarContent>
         <NavMain items={data.navMain} />
         <NavDocuments items={data.documents} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
+
       <SidebarFooter>
         <NavUser user={data.user} />
       </SidebarFooter>

@@ -1,68 +1,76 @@
+// src/router/index.tsx
 import { createBrowserRouter } from "react-router-dom";
-import HomePage from "../pages/HomePage.tsx";
-import ProtectedPage from "../pages/ProtectedPage.tsx";
-import NotFoundPage from "../pages/404Page.tsx";
-import AuthProtectedRoute from "./AuthProtectedRoute.tsx";
-import Providers from "../Providers.tsx";
-import { AuthPage } from "@/pages/AuthPage.tsx";
-import QuiSommesNous from "../pages/QuiSommesNous.tsx";
-import NosFormations from "@/pages/NosFormations.tsx";
-import NosFormateurs from "@/pages/NosFormateurs.tsx";
-import SafetyDays from "@/pages/SafetyDays.tsx";
+
+// Providers (contexte, thème, session…)
+import Providers from "@/Providers";
+
+// Pages publiques
+import HomePage from "@/pages/HomePage";
+import { AuthPage } from "@/pages/AuthPage";
+import QuiSommesNous from "@/pages/QuiSommesNous";
+import NosFormations from "@/pages/NosFormations";
+import NosFormateurs from "@/pages/NosFormateurs";
+import SafetyDays from "@/pages/SafetyDays";
+import NotFoundPage from "@/pages/404Page";
+
+// Auth guard
+import AuthProtectedRoute from "./AuthProtectedRoute";
+
+// Layout protégé (sidebar + Outlet)
+import AppLayout from "@/components/layout/AppLayout";
+
+// Page par défaut à droite (tu pourras remplacer par de vraies pages ensuite)
+import ProtectedPage from "@/pages/ProtectedPage";
+import FormationsAdmin from "@/pages/Admin/FormationsAdmin";
 
 const router = createBrowserRouter([
-  // I recommend you reflect the routes here in the pages folder
   {
     path: "/",
     element: <Providers />,
     children: [
-      // Public routes
-      {
-        path: "/",
-        element: <HomePage />,
-      },
-      {
-        path: "/auth",
-        element: <AuthPage />,
-      },
-     
-      {
-        path: "/qui-sommes-nous",
-        element: <QuiSommesNous />,
-      },
+      // ----- PUBLIC -----
+      { path: "/", element: <HomePage /> },
+      { path: "/auth", element: <AuthPage /> },
+      { path: "/qui-sommes-nous", element: <QuiSommesNous /> },
+      { path: "/nos-formations", element: <NosFormations /> },
+      { path: "/nos-formateurs", element: <NosFormateurs /> },
+      { path: "/safety-days", element: <SafetyDays /> },
 
+      // ----- PROTÉGÉ (avec sidebar) -----
       {
-        path: "/nos-formations",
-        element: <NosFormations />,
-      },
-
-      {
-        path: "/nos-formateurs",
-        element: <NosFormateurs />,
-      },
-
-      {
-        path: "/safety-days",
-        element: <SafetyDays />,
-      },
-      // Auth Protected routes
-
-      {
-        path: "/",
         element: <AuthProtectedRoute />,
         children: [
           {
             path: "/protected",
-            element: <ProtectedPage />,
+            element: <AppLayout />, // sidebar à gauche + <Outlet /> à droite
+            children: [
+              // /protected
+              { index: true, element: <ProtectedPage /> },
+
+              // Onglets de ta sidebar (tu peux remplacer ProtectedPage par d'autres pages)
+              { path: "admin/formations", element: <FormationsAdmin /> },
+              { path: "nos-formateurs", element: <ProtectedPage /> },
+              { path: "safety-day", element: <ProtectedPage /> },
+              { path: "espace", element: <ProtectedPage /> },
+
+              // Documents
+              { path: "data-library", element: <ProtectedPage /> },
+              { path: "reports", element: <ProtectedPage /> },
+              { path: "assistant", element: <ProtectedPage /> },
+
+              // Secondaire
+              { path: "settings", element: <ProtectedPage /> },
+              { path: "help", element: <ProtectedPage /> },
+              { path: "search", element: <ProtectedPage /> },
+            ],
           },
         ],
       },
     ],
   },
-  {
-    path: "*",
-    element: <NotFoundPage />,
-  },
+
+  // 404
+  { path: "*", element: <NotFoundPage /> },
 ]);
 
 export default router;
