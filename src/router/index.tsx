@@ -22,6 +22,7 @@ import AppLayout from "@/components/layout/AppLayout";
 // Page par défaut à droite (tu pourras remplacer par de vraies pages ensuite)
 import ProtectedPage from "@/pages/ProtectedPage";
 import FormationsAdmin from "@/pages/Admin/FormationsAdmin";
+import FormateursAdmin from "@/pages/Admin/FormateursAdmin";
 
 const router = createBrowserRouter([
   {
@@ -47,8 +48,41 @@ const router = createBrowserRouter([
               // /protected
               { index: true, element: <ProtectedPage /> },
 
+
+
+              {
+                path: "/protected/admin/dashboard",
+                element: <div className="p-6">Dashboard Admin</div>,
+              },
+              {
+                path: "/protected/admin/agenda",
+                element: <div className="p-6">Agenda Admin</div>,
+              },
+              {
+                path: "/protected/admin/formations",
+                element: <FormationsAdmin />, // déjà créé
+              },
+              {
+                path: "/protected/admin/formateurs",
+                element: <FormateursAdmin />,
+              },
+              {
+                path: "/protected/admin/documents",
+                element: <div className="p-6">Documents Admin</div>,
+              },
+              {
+                path: "/protected/admin/data",
+                element: <div className="p-6">Data Admin</div>,
+              },
+
+
+
+
+
+
+
+
               // Onglets de ta sidebar (tu peux remplacer ProtectedPage par d'autres pages)
-              { path: "admin/formations", element: <FormationsAdmin /> },
               { path: "nos-formateurs", element: <ProtectedPage /> },
               { path: "safety-day", element: <ProtectedPage /> },
               { path: "espace", element: <ProtectedPage /> },
