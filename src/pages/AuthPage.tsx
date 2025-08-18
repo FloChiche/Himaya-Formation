@@ -82,7 +82,7 @@ export function AuthPage() {
             <Tabs defaultValue="login" className="w-full">
               <div className="flex flex-col items-center gap-2 mb-2 text-center">
                 <img src="/logo.png" alt="logo" width={150} height={150} />
-                <h1 className="text-2xl font-bold text-primary">Acme Inc</h1>
+                <h1 className="text-2xl font-bold text-primary">Himaya-Formation.ma</h1>
                 <p className="text-primary opacity-80 font-medium">
                   Bringing the world together
                 </p>

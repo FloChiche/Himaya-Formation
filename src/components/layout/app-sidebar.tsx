@@ -39,7 +39,7 @@ const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/dashboard",
       icon: LayoutDashboardIcon,
     },
     {
@@ -159,7 +159,7 @@ export function AppSidebar() {
             >
               <a href="#">
                 <ArrowUpCircleIcon className="h-5 w-5" />
-                <span className="text-base font-semibold">Acme Inc.</span>
+                <span className="text-base font-semibold">Himaya-Formation.ma</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
